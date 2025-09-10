@@ -1,0 +1,8 @@
+TrimLog
+openpyxl
+pandas
+zhdatetime
+wxPython
+dill
+brotli
+requests
