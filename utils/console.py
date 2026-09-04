@@ -1,16 +1,26 @@
 # -*- coding: utf-8 -*-
 
 """
-伶伦转换器 命令行组件
+綜測計算軟體 命令行组件
 Linglun Converter Command Line IO Component
 
-版权所有 © 2024 金羿
-Copyright © 2024 EillesWan
+版权所有 © 2026 金羿
+Copyright © 2026 Eilles
 
-开源相关声明请见 仓库根目录下的 License.md
-Terms & Conditions: License.md in the root directory
+本文件選摘自“伶倫轉換器”專案，原專案地址：
+https://gitee.com/TriM-Organization/Linglun-Converter
+該項目以 汉钰律许可协议，第一版 授權。
+本文件繼承該協議，獨立授權，授權文本如下：
+
+伶伦转换器WXGUI版本（“原项目”）的协议颁发者为 金羿
+The Licensor of _Linglun Converter WxPython GUI_ is Eilles Wan.
+
+原项目根据 汉钰律许可协议，第一版（“本协议”）授权。
+任何人皆可从以下地址获得本协议副本：https://gitee.com/EillesWan/YulvLicenses。
+若非因法律要求或经过了特殊准许，此作品在根据本协议“原样”提供的基础上，不予提供任何形式的担保、任何明示、任何暗示或类似承诺。也就是说，用户将自行承担因此作品的质量或性能问题而产生的全部风险。
+详细的准许和限制条款请见原协议文本。
+
 """
-
 
 from typing import (
     Any,
@@ -30,9 +40,8 @@ from typing import (
 import TrimLog
 from TrimLog import object_constants, logger, log__init__
 
-
 logger.is_logging = True
-logger.suffix = ".llc"
+logger.suffix = ".uta"
 logger.is_tips = True
 
 

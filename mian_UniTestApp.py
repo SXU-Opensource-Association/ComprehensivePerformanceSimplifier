@@ -22,7 +22,6 @@ from utils.console import logger, object_constants, log__init__, TrimLog, Any
 from utils.yanlun import yanlun_texts, yanlun_fg_colour, yanlun_bg_colour
 from utils.charter import read_chart_data
 
-
 _ = gettext.gettext
 
 
@@ -46,7 +45,7 @@ osc = object_constants.ObjectStateConstant(
 # print(osc.exit_execution)
 osc.set_console(logger.console)
 
-log__init__(osc, TrimLog.PipManage(True, True, 40), True)
+log__init__(osc, True)
 
 logger.is_logging = True
 logger.suffix = ".uta"
@@ -205,7 +204,7 @@ class DrawingPanel(wx.Panel):
             return
         dc = wx.ClientDC(self)
         dc.SetPen(wx.Pen(wx.Colour("red"), 3))
-        dc.DrawLine(self.last_point, event.GetPosition()) # type: ignore
+        dc.DrawLine(self.last_point, event.GetPosition())  # type: ignore
         self.update_drawing(event.GetPosition())
         self.last_point = event.GetPosition()
 

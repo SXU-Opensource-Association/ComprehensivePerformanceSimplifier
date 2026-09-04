@@ -1,17 +1,27 @@
 # -*- coding: utf-8 -*-
 
 """
-伶伦转换器 言论版组件
+綜測計算軟體 言论版组件
 Linglun Converter Yan Lun Component
 
-版权所有 © 2024 金羿
-Copyright © 2024 EillesWan
+版权所有 © 2026 金羿
+Copyright © 2026 Eilles
 
-开源相关声明请见 仓库根目录下的 License.md
-Terms & Conditions: License.md in the root directory
+本文件選摘自“伶倫轉換器”專案，原專案地址：
+https://gitee.com/TriM-Organization/Linglun-Converter
+該項目以 汉钰律许可协议，第一版 授權。
+本文件繼承該協議，獨立授權，授權文本如下：
+
+伶伦转换器WXGUI版本（“原项目”）的协议颁发者为 金羿
+The Licensor of _Linglun Converter WxPython GUI_ is Eilles Wan.
+
+原项目根据 汉钰律许可协议，第一版（“本协议”）授权。
+任何人皆可从以下地址获得本协议副本：https://gitee.com/EillesWan/YulvLicenses。
+若非因法律要求或经过了特殊准许，此作品在根据本协议“原样”提供的基础上，不予提供任何形式的担保、任何明示、任何暗示或类似承诺。也就是说，用户将自行承担因此作品的质量或性能问题而产生的全部风险。
+详细的准许和限制条款请见原协议文本。
+
 """
 
-import requests
 import zhDateTime
 
 from .console import logger  # , prt
@@ -32,27 +42,15 @@ lunar_date = (
     lunar_datetime.chinese_calendar_day,
 )
 
+logger.info(
+    "當前日期：{} 西洋曆{}月{}日".format(lunar_datetime.date_hanzify(), *solar_date)
+)
+
 if solar_date == (4, 3):
     yanlun_texts = ["金羿ELS 生日快乐~！", "Happy Birthday, Eilles!"]
-# elif solar_date == (8, 6):
-#     yanlun_texts = ["诸葛亮与八卦阵 生日快乐~！", "Happy Birthday, bgArray~!"]
-# elif solar_date == (8, 16):
-#     yanlun_texts = ["鱼旧梦 生日快乐~！", "Happy Birthday, ElapsingDreams~!"]
 
 else:
-    try:
-        yanlun_texts = (
-            requests.get(
-                "https://nd.liteyuki.org/api/v3/share/content/Xpue?path=null",
-                timeout=10,
-            )
-            .text.strip("\n")
-            .split("\n")
-        )
-    except (ConnectionError, requests.HTTPError, requests.RequestException) as E:
-        logger.warning(f"读取言·论信息发生 互联网连接 错误：\n{E}")
-        yanlun_texts = ["以梦想为驱使 创造属于自己的未来"]
-    # noinspection PyBroadException
-    except BaseException as E:
-        logger.warning(f"读取言·论信息发生 未知 错误：\n{E}")
-        yanlun_texts = ["灵光焕发 深艺献心"]
+    yanlun_texts = [
+        "綜測計算簡化軟體 版權所有 © 2026 金羿",
+        "Comprehensive Performance Calculation Simplifying Software, Copyright © 2026 Eilles",
+    ]
