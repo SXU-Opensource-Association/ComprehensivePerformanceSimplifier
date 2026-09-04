@@ -1,5 +1,6 @@
 
 import pandas as pd
+from pathlib import Path
 # import openpyxl as opxl
 
 # xlsheet = opxl.load_workbook("",keep_vba=True,data_only=True,keep_links=True,rich_text=True)
@@ -8,7 +9,7 @@ import pandas as pd
 # xlsheet[""]._images
 # xlsheet._images
 # 定义函数读取证明表
-def read_chart_data(file_path: str) -> pd.DataFrame:
+def read_chart_data(file_path: str | Path) -> pd.DataFrame:
     """从文件路径读取Excel签到表并返回DataFrame"""
     data: pd.DataFrame = pd.read_excel(file_path)
     # 将学号列转换为字符串，避免科学计数法

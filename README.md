@@ -5,7 +5,7 @@
 
 用户界面操作逻辑如下：
 
-<img width="2559" height="1513" alt="图片" src="https://github.com/user-attachments/assets/d4d68156-346f-45c4-aae1-fd73a49439fb" />
+<img alt="图片" src="./path_to_your_image.png" />
 
 甲: 当该学生在同一个项目组内提交的证明文件过多，可以分入多个不同的二级指标的时候，对该证明图片选中“分选此图”，则可以将分选的图在结果中作为一个项目整合出现  
 乙：该图片无法证明提交需求的项目，在结果表格中标明此内容有误，方便后续核查  

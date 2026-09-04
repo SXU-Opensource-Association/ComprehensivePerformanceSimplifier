@@ -15,6 +15,7 @@ import random
 import shutil
 import gettext
 
+from typing import Optional
 from pathlib import Path
 
 from utils.console import logger, object_constants, log__init__, TrimLog, Any
@@ -65,13 +66,13 @@ reference_levels: dict[str, dict[str, dict[str, Any]]] = json.load(
 )
 true_result_csv = Path("./results/got_result.csv")
 if not true_result_csv.exists():
-    true_result_csv.open("w", encoding="gbk").write(
+    true_result_csv.open("w", encoding="gb18030").write(
         "学号,姓名,一级指标,二级指标,基础分,满分,描述,加分,证明备注,证明\n"
     )
 
 error_result_csv = Path("./results/error_result.csv")
 if not error_result_csv.exists():
-    error_result_csv.open("w", encoding="gbk").write("学号,姓名,描述,图片\n")
+    error_result_csv.open("w", encoding="gb18030").write("学号,姓名,描述,图片\n")
 
 
 class PersonStatus:
@@ -142,9 +143,9 @@ class DrawingPanel(wx.Panel):
 
         self.image = wx.Image(image_path, wx.BITMAP_TYPE_ANY)
 
-        self.original_image = self.image.Copy()
+        self.original_width, self.original_height = self.image.GetSize()
         self.drawing = False
-        self.last_point = None
+        self.last_point: Optional[wx.Point] = None
         self.scale_factor = 1.0
 
         # Bind events
@@ -153,6 +154,16 @@ class DrawingPanel(wx.Panel):
         self.Bind(wx.EVT_LEFT_UP, self.on_left_up)
         self.Bind(wx.EVT_MOTION, self.on_motion)
         self.Bind(wx.EVT_MOUSEWHEEL, self.on_mouse_wheel)
+        self.Bind(wx.EVT_LEFT_DCLICK, self.on_left_dclick)
+
+    def on_left_dclick(self, event):
+        # 将图片向左旋转九十度
+        self.image = self.image.Rotate90(True)
+        self.original_height, self.original_width = (
+            self.original_width,
+            self.original_height,
+        )
+        self.Refresh()
 
     def change_image(
         self,
@@ -165,7 +176,7 @@ class DrawingPanel(wx.Panel):
         self.i_path = image_path
 
         self.image = wx.Image(image_path, wx.BITMAP_TYPE_ANY)
-        self.original_image = self.image.Copy()
+        self.original_width, self.original_height = self.image.GetSize()
         self.scale_factor = 1.0
         self.Refresh()
 
@@ -174,8 +185,8 @@ class DrawingPanel(wx.Panel):
         dc.Clear()
         # wx.Bitmap().Rescale
         scaled_image = self.image.Scale(
-            int(self.original_image.GetWidth() * self.scale_factor),
-            int(self.original_image.GetHeight() * self.scale_factor),
+            int(self.original_width * self.scale_factor),
+            int(self.original_height * self.scale_factor),
             quality=wx.IMAGE_QUALITY_HIGH,
         )
         dc.DrawBitmap(scaled_image.ConvertToBitmap(), 0, 0)
@@ -193,15 +204,15 @@ class DrawingPanel(wx.Panel):
         if not self.drawing:
             return
         dc = wx.ClientDC(self)
-        dc.SetPen(wx.Pen("red", 3))
-        dc.DrawLine(self.last_point, event.GetPosition())
+        dc.SetPen(wx.Pen(wx.Colour("red"), 3))
+        dc.DrawLine(self.last_point, event.GetPosition()) # type: ignore
         self.update_drawing(event.GetPosition())
         self.last_point = event.GetPosition()
 
     def update_drawing(self, position):
         # wx.Point() * 3
         mem_dc = wx.MemoryDC(self.image.ConvertToBitmap())
-        mem_dc.SetPen(wx.Pen("red", 3))
+        mem_dc.SetPen(wx.Pen(wx.Colour("red"), int(3 / self.scale_factor + 0.5)))
         mem_dc.DrawLine(
             int(self.last_point.x / self.scale_factor),  # type: ignore
             int(self.last_point.y / self.scale_factor),  # type: ignore
@@ -339,8 +350,8 @@ class MainFrame(wx.Frame):
         self.yanlun_now = random.randrange(0, yanlun_length)
         self.m_yanlun_staticText1.Wrap(-1)
 
-        self.m_yanlun_staticText1.SetForegroundColour(yanlun_fg_colour)
-        self.m_yanlun_staticText1.SetBackgroundColour(yanlun_bg_colour)
+        self.m_yanlun_staticText1.SetForegroundColour(wx.Colour(yanlun_fg_colour))
+        self.m_yanlun_staticText1.SetBackgroundColour(wx.Colour(yanlun_bg_colour))
 
         yanlun_sbSizer2.Add(self.m_yanlun_staticText1, 0, wx.ALL | wx.EXPAND, 5)
 
@@ -502,13 +513,13 @@ class MainFrame(wx.Frame):
             info_sbSizer5.GetStaticBox(),
             wx.ID_ANY,
             _(
-                "客观描述证明内容：\n - 奖级：校级\t奖次：参与奖\t任职：个人\n - 活动：北昌大学第零届“你好世界，一二三四”啊这什么大赛啥学院初赛\n主观描述证明内容：\n\t北昌大学第零届“你好世界，一二三四”啊这什么大赛啥学院初赛参与奖"
+                "主观描述证明内容：\n\t北昌大学第零届“你好世界，一二三四”啊这什么大赛啥学院初赛参与奖\n客观描述证明内容：奖级：校级\\奖次：参与奖\\任职：个人\\活动：北昌大学第零届“你好世界，一二三四”啊这什么大赛啥学院初赛\n"
             ),
             wx.DefaultPosition,
             wx.DefaultSize,
             wx.TE_MULTILINE | wx.TE_PROCESS_TAB | wx.TE_RICH | wx.HSCROLL,
         )
-        info_sbSizer5.Add(self.m_description_textCtrl1, 2, wx.ALL | wx.EXPAND, 5)
+        info_sbSizer5.Add(self.m_description_textCtrl1, 1, wx.ALL | wx.EXPAND, 5)
 
         self.m_basic_max_staticText10 = wx.StaticText(
             info_sbSizer5.GetStaticBox(),
@@ -537,7 +548,7 @@ class MainFrame(wx.Frame):
             the_third_lvquote_sbSizer6.GetStaticBox(),
             wx.ID_ANY,
             _(
-                "请注意：以下各个职位若有兼任皆不累加，取最高分。\n班委成员中，班长、团支书、学委加1分；其他班委加0.5分；舍长加0.2分。\n校级组织中（校学生会、校报、广播站、电视台、社联），主席团加1分，部长加0.5分，副部长加0.4分，干事0.1分。\n辩论队：教练0.5、负责人0.4、队员0.1\n足篮排等各类队伍：队长0.4，副队长0.3，其他负责（财务、副队长）0.2，队员0.1\n院级组织（院学生会、青协、青媒、足篮排队），加分标准同校级。"
+                "以下各个职位若有兼任皆不累加，取最高分。\n班委成员中，班长、团支书、学委加1分；其他班委加0.5分；舍长加0.2分。\n校级组织中（校学生会、校报、广播站、电视台、社联），主席团加1分，部长加0.5分，副部长加0.4分，干事0.1分。\n辩论队：教练0.5、负责人0.4、队员0.1\n足篮排羽毛球等各类体育队伍：队长0.4，副队长0.3，其他负责（财务、宣发）加0.2，队员0.1。\n院级组织（院学生会、青协、青媒、足篮排队），加分标准同校级。"
             ),
             wx.DefaultPosition,
             wx.DefaultSize,
@@ -549,9 +560,9 @@ class MainFrame(wx.Frame):
 
         left_bSizer2.Add(the_third_lvquote_sbSizer6, 3, wx.EXPAND, 5)
 
-        main_bSizer1.Add(left_bSizer2, 1, wx.EXPAND, 5)
+        main_bSizer1.Add(left_bSizer2, 3, wx.EXPAND, 5)
 
-        bSizer3 = wx.BoxSizer(wx.VERTICAL)
+        right_bSizer3 = wx.BoxSizer(wx.VERTICAL)
 
         picprove_area_sbSizer4 = wx.StaticBoxSizer(
             wx.StaticBox(self, wx.ID_ANY, _("图片证明区")), wx.HORIZONTAL
@@ -604,7 +615,7 @@ class MainFrame(wx.Frame):
             self.m_right_prov_pic_staticText2, 0, wx.ALL | wx.EXPAND, 5
         )
 
-        bSizer3.Add(picprove_area_sbSizer4, 8, wx.EXPAND, 5)
+        right_bSizer3.Add(picprove_area_sbSizer4, 8, wx.EXPAND, 5)
 
         checker_area_sbSizer3 = wx.StaticBoxSizer(
             wx.StaticBox(self, wx.ID_ANY, _("确认区")), wx.VERTICAL
@@ -697,6 +708,22 @@ class MainFrame(wx.Frame):
             5,
         )
 
+        self.m_picture_list_staticText4 = wx.StaticText(
+            checker_area_sbSizer3.GetStaticBox(),
+            wx.ID_ANY,
+            _("[当前图片 1 / 1]"),
+            wx.DefaultPosition,
+            wx.DefaultSize,
+            0,
+        )
+        self.m_picture_list_staticText4.Wrap(-1)
+        bSizer8.Add(
+            self.m_picture_list_staticText4,
+            0,
+            wx.ALL | wx.EXPAND | wx.RESERVE_SPACE_EVEN_IF_HIDDEN,
+            5,
+        )
+
         bSizer9 = wx.BoxSizer(wx.VERTICAL)
 
         self.m_only_select_button4 = wx.Button(
@@ -713,9 +740,9 @@ class MainFrame(wx.Frame):
 
         checker_area_sbSizer3.Add(bSizer8, 1, wx.EXPAND, 5)
 
-        bSizer3.Add(checker_area_sbSizer3, 1, wx.EXPAND, 5)
+        right_bSizer3.Add(checker_area_sbSizer3, 1, wx.EXPAND, 5)
 
-        main_bSizer1.Add(bSizer3, 1, wx.EXPAND, 5)
+        main_bSizer1.Add(right_bSizer3, 5, wx.EXPAND, 5)
 
         self.SetSizer(main_bSizer1)
         self.Layout()
@@ -772,6 +799,7 @@ class MainFrame(wx.Frame):
         # self.m_prove_bitmap1.Bind(wx.EVT_LEFT_DOWN, self.on_prove_pic_move_start)
         # self.m_prove_bitmap1.Bind(wx.EVT_LEFT_UP, self.on_prove_pic_move_dropped)
         # self.m_prove_bitmap1.Bind(wx.EVT_MOUSEWHEEL, self.on_prove_pic_wheel)
+
         self.m_prov_picture_panel1.Bind(
             wx.EVT_RIGHT_DCLICK, self.on_prov_pic_right_button_pressed
         )
@@ -811,7 +839,7 @@ class MainFrame(wx.Frame):
         self.m_person_info_staticText9.SetLabel(self.now_person.get_person_info())
 
         self.m_description_textCtrl1.SetValue(
-            "客观描述证明内容：\n- 奖级：{2}\t奖次：{3}\t任职：{0}\n- 活动：{1}\n主观描述证明内容：\n\t{4}".format(
+            "主观描述证明内容：\n\t{4}\n\n客观描述证明内容：[奖级]：{2}\\[奖次]：{3}\\[任职]：{0}\\[活动]：{1}".format(
                 *self.chart_zongce_data[self.progress][8:13]
             )
         )
@@ -832,8 +860,9 @@ class MainFrame(wx.Frame):
                                     else self.chart_zongce_data[self.progress][0] + i
                                 ).strip()
                             )
-                        ).suffix.lower()
-                        in (".jpg", ".png", ".jpeg")
+                        )
+                        .suffix.lower()
+                        .endswith((".jpg", ".png", ".jpeg"))
                     )
                     else _n.with_suffix(".png")
                 )
@@ -859,6 +888,7 @@ class MainFrame(wx.Frame):
                 )
             self.now_picture_list.append((now_picture_list[i], False, False))
         self.now_picture_list.sort(key=lambda x: x[0].name)
+        self.picture_list_length = len(self.now_picture_list)
 
         logger.info("当前图片列：{}".format(self.now_picture_list))
 
@@ -870,6 +900,11 @@ class MainFrame(wx.Frame):
 
         self.m_has_used_staticText3.SetLabel(
             "已使用" if self.now_picture_list[self.now_picture_index][2] else "————"
+        )
+        self.m_picture_list_staticText4.SetLabel(
+            "[当前图片 {:0>2d}/{:0>2d}]".format(
+                self.now_picture_index + 1, self.picture_list_length
+            )
         )
         self.m_only_select_checkBox1.SetValue(
             self.now_picture_list[self.now_picture_index][1]
@@ -921,23 +956,28 @@ class MainFrame(wx.Frame):
             )
             self.m_the_third_lvquote_richText1.SetValue("请选择一级二级指标")
 
+    def reload_chart_data(self, _progress: int = 0):
+        self.total_data = read_chart_data(self.data_chart_path)
+        self.chart_zongce_data: list[list[str]] = self.total_data.values.tolist()  # type: ignore
+        self.length_progress = len(self.chart_zongce_data)
+        self.progress: int = _progress
+        self.image_path: Path = self.data_chart_path.parent / "图片"
+
     # Virtual event handlers, override them in your derived class
     def on_open_button_pressed(self, event):
         fileDialog = wx.FileDialog(
             None,
             message="选择表格文件",
-            defaultDir="./",
+            defaultDir=".",
+            defaultFile="",
             wildcard="Excel表格文档 (*.xls;*.xlsx)|*.xls;*.xlsx",
             style=wx.FD_OPEN | wx.FD_FILE_MUST_EXIST,
         )
         dialogResult = fileDialog.ShowModal()
         if dialogResult == wx.ID_OK:
-            logger.info("选择表格文件：{}".format(fileDialog.GetPath()))
-            self.total_data = read_chart_data(fileDialog.GetPath())
-            self.chart_zongce_data: list[list[str]] = self.total_data.values.tolist()  # type: ignore
-            self.length_progress = len(self.chart_zongce_data)
-            self.progress: int = 0
-            self.image_path: Path = Path(fileDialog.GetPath()).parent / "图片"
+            self.data_chart_path = Path(fileDialog.GetPath())
+            logger.info("选择表格文件：{}".format(self.data_chart_path))
+            self.reload_chart_data()
             self.refresh_data()
         else:
             logger.info("未选择表格文件")
@@ -949,12 +989,36 @@ class MainFrame(wx.Frame):
         self.Destroy()
 
     def on_continue_progress_button_pressed(self, event):
-        self.progress = int(open("PGS.UTA", "r", encoding="utf-8").read())
+        with open("PGS.UTA", "r", encoding="utf-8") as f:
+            _prg = json.load(f)
+        if isinstance(_prg, (str, int)):
+            logger.info("读取进度：{}".format(_prg))
+            self.progress = int(_prg)
+        else:
+            if "PROGRESS" in _prg:
+                logger.info("读取进度：{}".format(_prg["PROGRESS"]))
+                self.progress = _prg["PROGRESS"]
+            else:
+                self.progress = 0
+            if "DATA-FILE" in _prg:
+                logger.info("读取数据文件：{}".format(_prg["DATA-FILE"]))
+                self.data_chart_path = Path(_prg["DATA-FILE"])
+                self.reload_chart_data(_progress=self.progress)
         self.refresh_data()
 
     def on_save_progress_button_pressed(self, event):
         if self.m_progress_save_status_staticText81.GetLabel() == "✔已保存":
-            open("PGS.UTA", "w", encoding="utf-8").write("{}".format(self.progress))
+            with open("PGS.UTA", "w", encoding="utf-8") as f:
+                json.dump(
+                    {
+                        "PROGRESS": self.progress,
+                        "DATA-FILE": str(self.data_chart_path.resolve()),
+                    },
+                    f,
+                    ensure_ascii=False,
+                    indent=4,
+                )
+            # open("PGS.UTA", "w", encoding="utf-8").write("{}".format(self.progress))
             wx.MessageBox("已暂存", "保存", wx.OK | wx.ICON_INFORMATION)
         else:
             wx.MessageBox(
@@ -984,6 +1048,7 @@ class MainFrame(wx.Frame):
             else (yanlun_length if self.yanlun_now < 0 else 0)
         )
         self.m_yanlun_staticText1.SetLabelText(yanlun_texts[self.yanlun_now] + "\r")
+
     def on_first_lvquote_choice(self, event):
 
         self.m_progress_save_status_staticText81.SetLabel("❌未存储")
@@ -1042,6 +1107,11 @@ class MainFrame(wx.Frame):
         )
         self.m_has_used_staticText3.SetLabel(
             "已使用" if self.now_picture_list[self.now_picture_index][2] else "————"
+        )
+        self.m_picture_list_staticText4.SetLabel(
+            "[当前图片 {:0>2d}/{:0>2d}]".format(
+                self.now_picture_index + 1, self.picture_list_length
+            )
         )
 
     def on_prove_pic_putchar(self, event):
@@ -1115,6 +1185,11 @@ class MainFrame(wx.Frame):
         self.m_has_used_staticText3.SetLabel(
             "已使用" if self.now_picture_list[self.now_picture_index][2] else "————"
         )
+        self.m_picture_list_staticText4.SetLabel(
+            "[当前图片 {:0>2d}/{:0>2d}]".format(
+                self.now_picture_index + 1, self.picture_list_length
+            )
+        )
 
         # event.Skip()
 
@@ -1124,8 +1199,11 @@ class MainFrame(wx.Frame):
         return (
             self.m_description_textCtrl1.GetValue()
             .split("\n\t")[1]
+            .split("客观描述证明内容：[奖级]：")[0]
+            .strip()
             .replace("\n", "=")
-            .replace('"', "=")
+            .replace('"', "#")
+            .replace("'", "#")
             .replace("+", "=")
             .replace("\\", "=")
             .replace("/", "=")
@@ -1135,9 +1213,11 @@ class MainFrame(wx.Frame):
             .replace("<", "=")
             .replace(">", "=")
             .replace("|", "=")
+            .replace("•", "·")
+            .replace(",", "，")
         )
 
-    def move_picture_to(
+    def copy_picture_to(
         self,
         destination_folder_path: Path,
         get_choice: bool = True,
@@ -1185,7 +1265,7 @@ class MainFrame(wx.Frame):
                     True,
                 )
 
-                logger.info("图片移动至：{}".format(_m))
+                logger.info("图片拷贝至：{}".format(_m))
                 # if not all_picture:
                 #     self.now_picture_list.remove(pic_need_to_move[i])
 
@@ -1208,13 +1288,13 @@ class MainFrame(wx.Frame):
 
         # "|".join(self.move_picture_to(self.now_person.get_store_path() / "#错误"))
 
-        error_result_csv.open("a", encoding="gbk").write(
-            "{id}, {name}, {desc}, {pics}\n".format(
+        error_result_csv.open("a", encoding="gb18030").write(
+            "'{id},{name},{desc},{pics}\n".format(
                 id=self.now_person.get_id(),
                 name=self.now_person.get_name(),
                 desc=self.get_description_rec(),
                 pics="|".join(
-                    self.move_picture_to(
+                    self.copy_picture_to(
                         self.now_person.get_store_path() / "#错误", False, True
                     )
                 ),
@@ -1240,8 +1320,8 @@ class MainFrame(wx.Frame):
 
     def on_agree_button_presswd(self, event):
         # 学号,姓名,一级指标,二级指标,基础分,满分,描述,加分,证明备注,证明
-        true_result_csv.open("a", encoding="gbk").write(
-            "{id}, {name}, {lv1}, {lv2}, {base}, {max_s}, {desc}, {add_s}, {req_m}, {pics}\n".format(
+        true_result_csv.open("a", encoding="gb18030").write(
+            "'{id},{name},{lv1},{lv2},{base},{max_s},{desc},{add_s},{req_m},{pics}\n".format(
                 id=self.now_person.get_id(),
                 name=self.now_person.get_name(),
                 lv1=self.m_the_first_lvquote_choice1.GetStringSelection(),
@@ -1256,7 +1336,7 @@ class MainFrame(wx.Frame):
                 add_s=self.m_score_spinCtrlDouble1.GetValue(),
                 req_m="需要更多证明" if self.m_need_more_checkBox2.GetValue() else "",
                 pics="|".join(
-                    self.move_picture_to(self.now_person.get_store_path(), True, True)
+                    self.copy_picture_to(self.now_person.get_store_path(), True, True)
                 ),
             )
         )
@@ -1282,11 +1362,11 @@ class MainFrame(wx.Frame):
 
     def on_only_select_button_selected(self, event):
         if _m := "|".join(
-            self.move_picture_to(self.now_person.get_store_path(), True, False)
+            self.copy_picture_to(self.now_person.get_store_path(), True, False)
         ):
             self.m_progress_save_status_staticText81.SetLabel("❌未存储")
-            true_result_csv.open("a", encoding="gbk").write(
-                "{id}, {name}, {lv1}, {lv2}, {base}, {max_s}, {desc}, {add_s}, {req_m}, {pics}\n".format(
+            true_result_csv.open("a", encoding="gb18030").write(
+                "'{id},{name},{lv1},{lv2},{base},{max_s},{desc},{add_s},{req_m},{pics}\n".format(
                     id=self.now_person.get_id(),
                     name=self.now_person.get_name(),
                     lv1=self.m_the_first_lvquote_choice1.GetStringSelection(),
@@ -1314,6 +1394,11 @@ class MainFrame(wx.Frame):
             ).ShowModal()
         self.m_has_used_staticText3.SetLabel(
             "已使用" if self.now_picture_list[self.now_picture_index][2] else "————"
+        )
+        self.m_picture_list_staticText4.SetLabel(
+            "[当前图片 {:0>2d}/{:0>2d}]".format(
+                self.now_picture_index + 1, self.picture_list_length
+            )
         )
         self.m_only_select_checkBox1.SetValue(
             self.now_picture_list[self.now_picture_index][1]
